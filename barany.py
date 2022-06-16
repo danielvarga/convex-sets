@@ -5,7 +5,7 @@ import matplotlib.cm as cmx
 
 import matplotlib.pyplot as plt
 
-n = 5
+n = 30
 
 np.random.seed(2)
 
@@ -99,8 +99,8 @@ left, right = sides[0], sides[2]
 down, up = sides[1], sides[3]
 down_v, up_v = values[1], values[3]
 
-ax.scatter(down, np.zeros_like(down), down_v, marker='v')
-ax.scatter(up, np.ones_like(up), up_v, marker='v')
+# ax.scatter(down, np.zeros_like(down), down_v, marker='v')
+# ax.scatter(up, np.ones_like(up), up_v, marker='v')
 
 
 horizontal_levels = []
@@ -109,7 +109,7 @@ for i in range(n):
     p_left, p_right, x, y = intersection_projections(a, b, left, right)
     level = down_v[i] * (1 - y) + up_v[i] * y
     horizontal_levels.append(level)
-    ax.scatter(x, y, level, s=50, color=scalarMap.to_rgba(i), marker='o')
+    ax.scatter(x, y, level, s=50, color=scalarMap.to_rgba(i), marker='.')
 horizontal_levels = np.array(horizontal_levels)
 
 left, right = sides[1], sides[3]
@@ -121,15 +121,11 @@ for i in range(n):
     a, b = down[i], up[i]
     p_left, p_right, x, y = intersection_projections(a, b, left, right)
     level = down_v[i] * (1 - y) + up_v[i] * y
+    level = 1 - level
     vertical_levels.append(level)
-    ax.scatter(y, x, 1 - level, s=50, color=scalarMap.to_rgba(n + i), marker='x')
+    ax.scatter(y, x, level, s=50, color=scalarMap.to_rgba(n + i), marker='x')
 vertical_levels = np.array(vertical_levels).T
 
 plt.show()
 
-print(horizontal_levels)
-print(vertical_levels)
-
-exit()
-
-
+print((horizontal_levels - vertical_levels > 0).astype(int))
