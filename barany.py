@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.cm as cmx
 
 import matplotlib.pyplot as plt
 
@@ -68,18 +69,22 @@ def test_intersection_projections():
 
 # test_intersection_projections() ; exit()
 
+fig = plt.figure()
+ax  = fig.add_subplot(111, projection = '3d')
+color_map = plt.get_cmap('viridis')
+cNorm = matplotlib.colors.Normalize(vmin=0, vmax=2 * n)
+scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=color_map)
+
 left, right = sides[0], sides[2]
 down, up = sides[1], sides[3]
 down_v, up_v = values[1], values[3]
-
-fig = plt.figure()
-ax  = fig.add_subplot(111, projection = '3d')
 
 for i in range(n):
     a, b = down[i], up[i]
     p_left, p_right, x, y = intersection_projections(a, b, left, right)
     level = down_v * (1 - x) + up_v * x
-    ax.scatter(x, y, level, s=10)
+    ax.scatter(x, y, level, s=10, color=scalarMap.to_rgba(i))
+
 plt.show()
 exit()
 
