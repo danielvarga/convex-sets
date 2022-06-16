@@ -5,7 +5,9 @@ import matplotlib.cm as cmx
 
 import matplotlib.pyplot as plt
 
-n = 10
+n = 5
+
+np.random.seed(2)
 
 sides = []
 for i in range(4):
@@ -17,6 +19,24 @@ sides = np.array(sides)
 values = sides.copy()
 values[1] = 1 - values[1]
 values[2] = 1 - values[2]
+
+
+def test_manifold():
+    fig = plt.figure()
+    ax  = fig.add_subplot(111, projection = '3d')
+    for direction in range(2):
+        left, right = sides[direction], sides[direction+2]
+        left_v, right_v = values[direction], values[direction+2]
+        if direction == 0:
+            for i in range(n):
+                ax.plot([left[i], right[i]], [0, 1], [left_v[i], right_v[i]])
+        else:
+            for i in range(n):
+                ax.plot([1, 0], [left[i], right[i]], [left_v[i], right_v[i]])
+    plt.show()
+
+# test_manifold() ; exit()
+
 
 # (a,b,c) for line ax+by+c=0 through p1 and p2.
 # (y-y1)*(x2-x1) = (y2-y1)(x-x1), that is,
@@ -79,24 +99,37 @@ left, right = sides[0], sides[2]
 down, up = sides[1], sides[3]
 down_v, up_v = values[1], values[3]
 
+ax.scatter(down, np.zeros_like(down), down_v, marker='v')
+ax.scatter(up, np.ones_like(up), up_v, marker='v')
+
+
+horizontal_levels = []
 for i in range(n):
     a, b = down[i], up[i]
     p_left, p_right, x, y = intersection_projections(a, b, left, right)
-    level = down_v * (1 - x) + up_v * x
-    ax.scatter(x, y, level, s=10, color=scalarMap.to_rgba(i))
+    level = down_v[i] * (1 - y) + up_v[i] * y
+    horizontal_levels.append(level)
+    ax.scatter(x, y, level, s=50, color=scalarMap.to_rgba(i), marker='o')
+horizontal_levels = np.array(horizontal_levels)
+
+left, right = sides[1], sides[3]
+down, up = sides[0], sides[2]
+down_v, up_v = values[0], values[2]
+
+vertical_levels = []
+for i in range(n):
+    a, b = down[i], up[i]
+    p_left, p_right, x, y = intersection_projections(a, b, left, right)
+    level = down_v[i] * (1 - y) + up_v[i] * y
+    vertical_levels.append(level)
+    ax.scatter(y, x, 1 - level, s=50, color=scalarMap.to_rgba(n + i), marker='x')
+vertical_levels = np.array(vertical_levels).T
 
 plt.show()
+
+print(horizontal_levels)
+print(vertical_levels)
+
 exit()
 
 
-for direction in range(2):
-    left, right = sides[direction], sides[direction+2]
-    left_v, right_v = values[direction], values[direction+2]
-    if direction == 0:
-        for i in range(n):
-            plt.plot([left[i], right[i]], [0, 1], [left_v[i], right_v[i]])
-    else:
-        for i in range(n):
-            plt.plot([0, 1], [left[i], right[i]], [left_v[i], right_v[i]])
-
-plt.show()
