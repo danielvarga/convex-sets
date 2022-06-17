@@ -5,34 +5,27 @@ import matplotlib.cm as cmx
 
 import matplotlib.pyplot as plt
 
-n = 4
+n = 6
 
-np.random.seed(5)
-
-sides = []
-for i in range(4):
-    a = np.random.uniform(size=n-2).tolist() + [0, 1]
-    sides.append(sorted(a))
-
-sides = np.array(sides)
-
-sides = np.array(
-    [[0., 0.2, 0.8, 1.],
-     [0., 0.2, 0.8, 1.],
-     [0., 0.4, 0.6, 1.],
-     [0., 0.4, 0.6, 1.]]
-)
+# np.random.seed(5)
 
 
-sides = np.around(sides, 1)
-print(sides)
-
-values = sides.copy()
-values[1] = 1 - values[1]
-values[2] = 1 - values[2]
+def generate_conf(seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    sides = []
+    for i in range(4):
+        a = np.random.uniform(size=n-2).tolist() + [0, 1]
+        sides.append(sorted(a))
+    sides = np.array(sides)
+    values = sides.copy()
+    values[1] = 1 - values[1]
+    values[2] = 1 - values[2]
+    return sides, values
 
 
 def test_manifold():
+    sides, values = generate_conf()
     fig = plt.figure()
     ax  = fig.add_subplot(111, projection = '3d')
     for direction in range(2):
@@ -52,7 +45,6 @@ def test_manifold():
 # (a,b,c) for line ax+by+c=0 through p1 and p2.
 # (y-y1)*(x2-x1) = (y2-y1)(x-x1), that is,
 # y*(x2-x1) + (-y2+y1)*x + (x1-x2)*y1+x1*(y2-y1) = 0
-
 def line_through(p1, p2):
     x1, y1 = p1[..., 0], p1[..., 1]
     x2, y2 = p2[..., 0], p2[..., 1]
@@ -106,44 +98,74 @@ color_map = plt.get_cmap('viridis')
 cNorm = matplotlib.colors.Normalize(vmin=0, vmax=2 * n)
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=color_map)
 
-left, right = sides[0], sides[2]
-down, up = sides[1], sides[3]
-down_v, up_v = values[1], values[3]
 
-# ax.scatter(down, np.zeros_like(down), down_v, marker='v')
-# ax.scatter(up, np.ones_like(up), up_v, marker='v')
+def calculate(sides, visualize=False):
+    values = sides.copy()
+    values[1] = 1 - values[1]
+    values[2] = 1 - values[2]
+
+    left, right = sides[0], sides[2]
+    down, up = sides[1], sides[3]
+    down_v, up_v = values[1], values[3]
+
+    # ax.scatter(down, np.zeros_like(down), down_v, marker='v')
+    # ax.scatter(up, np.ones_like(up), up_v, marker='v')
+
+    horizontal_levels = []
+    for i in range(n):
+        a, b = down[i], up[i]
+        p_left, p_right, x, y = intersection_projections(a, b, left, right)
+        level = down_v[i] * (1 - y) + up_v[i] * y
+        horizontal_levels.append(level)
+        if visualize:
+            ax.scatter(x, y, level, s=50, color=scalarMap.to_rgba(i), marker='.')
+    horizontal_levels = np.array(horizontal_levels)
+
+    left, right = sides[1], sides[3]
+    down, up = sides[0], sides[2]
+    down_v, up_v = values[0], values[2]
+
+    vertical_levels = []
+    for i in range(n):
+        a, b = down[i], up[i]
+        p_left, p_right, x, y = intersection_projections(a, b, left, right)
+        level = down_v[i] * (1 - y) + up_v[i] * y
+        level = 1 - level
+        vertical_levels.append(level)
+        if visualize:
+            ax.scatter(y, x, level, s=50, color=scalarMap.to_rgba(n + i), marker='x')
+    vertical_levels = np.array(vertical_levels).T
+
+    if visualize:
+        plt.show()
+
+    above = (horizontal_levels - vertical_levels > 1e-6).astype(int)
+    below = (horizontal_levels - vertical_levels < -1e-6).astype(int)
+    mask = above - below
+
+    return horizontal_levels, vertical_levels, mask
 
 
-horizontal_levels = []
-for i in range(n):
-    a, b = down[i], up[i]
-    p_left, p_right, x, y = intersection_projections(a, b, left, right)
-    level = down_v[i] * (1 - y) + up_v[i] * y
-    horizontal_levels.append(level)
-    ax.scatter(x, y, level, s=50, color=scalarMap.to_rgba(i), marker='.')
-horizontal_levels = np.array(horizontal_levels)
-
-left, right = sides[1], sides[3]
-down, up = sides[0], sides[2]
-down_v, up_v = values[0], values[2]
-
-vertical_levels = []
-for i in range(n):
-    a, b = down[i], up[i]
-    p_left, p_right, x, y = intersection_projections(a, b, left, right)
-    level = down_v[i] * (1 - y) + up_v[i] * y
-    level = 1 - level
-    vertical_levels.append(level)
-    ax.scatter(y, x, level, s=50, color=scalarMap.to_rgba(n + i), marker='x')
-vertical_levels = np.array(vertical_levels).T
-
-plt.show()
+for i in range(10000):
+    sides, values = generate_conf(seed=i)
+    horizontal_levels, vertical_levels, mask = calculate(sides, visualize=False)
+    m = mask[1:-1, 1:-1]
+    # if m.min() == 1 or m.max() == -1:
+    # if m.max() == -1:
+    if m.min() == 1:
+        print(i)
+        print(mask)
+        print(horizontal_levels)
+        print(vertical_levels)
+        _ = calculate(sides, visualize=True)
+        exit()
 
 
-above = (horizontal_levels - vertical_levels > 1e-6).astype(int)
-below = (horizontal_levels - vertical_levels < -1e-6).astype(int)
 
-print(above - below)
-
+'''
+sides, values = generate_conf()
+horizontal_levels, vertical_levels, mask = calculate(sides, visualize=True)
+print(mask)
 print(horizontal_levels)
 print(vertical_levels)
+'''
