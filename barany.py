@@ -16,6 +16,14 @@ for i in range(4):
 
 sides = np.array(sides)
 
+sides = np.array(
+    [[0., 0.2, 0.8, 1.],
+     [0., 0.2, 0.8, 1.],
+     [0., 0.4, 0.6, 1.],
+     [0., 0.4, 0.6, 1.]]
+)
+
+
 sides = np.around(sides, 1)
 print(sides)
 
