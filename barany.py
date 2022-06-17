@@ -5,9 +5,9 @@ import matplotlib.cm as cmx
 
 import matplotlib.pyplot as plt
 
-n = 30
+n = 4
 
-np.random.seed(2)
+np.random.seed(5)
 
 sides = []
 for i in range(4):
@@ -15,6 +15,9 @@ for i in range(4):
     sides.append(sorted(a))
 
 sides = np.array(sides)
+
+sides = np.around(sides, 1)
+print(sides)
 
 values = sides.copy()
 values[1] = 1 - values[1]
@@ -128,4 +131,11 @@ vertical_levels = np.array(vertical_levels).T
 
 plt.show()
 
-print((horizontal_levels - vertical_levels > 0).astype(int))
+
+above = (horizontal_levels - vertical_levels > 1e-6).astype(int)
+below = (horizontal_levels - vertical_levels < -1e-6).astype(int)
+
+print(above - below)
+
+print(horizontal_levels)
+print(vertical_levels)
